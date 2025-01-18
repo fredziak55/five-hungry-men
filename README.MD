@@ -1,1 +1,2 @@
-# Wybrany temat - do określania
+# Five hungry men
+Project in C++ based on dining philosophers problem
