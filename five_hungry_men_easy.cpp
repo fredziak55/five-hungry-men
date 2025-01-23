@@ -49,7 +49,7 @@ void hungryMan(int id, int numLoops, int maxConsecutiveMeals) {
         int right = std::max(id, (id + 1) % N); // there are 5 forks, so the right fork is the one with the higher index
 
         // Wait based on priority (lower eaten => shorter wait)
-        std::this_thread::sleep_for(std::chrono::milliseconds(priority * 10 + 50)); // sleep time based on priority, + 50 to avoid 0 sleep time
+        std::this_thread::sleep_for(std::chrono::microseconds(priority * 50 + 50)); // sleep time based on priority, + 50 to avoid 0 sleep time
 
         // Lock forks in the correct order to avoid deadlock
         std::scoped_lock lock(forks[left], forks[right]); // scoped_lock is a C++17 feature that can lock multiple mutexes at once. 
