@@ -32,10 +32,10 @@ void hungryMan(int id) {
 
         // Identify left and right forks by index
         int left = std::min(id, (id + 1) % N); //modulo N -> to make sure it is the circular table and range within 0 to N-1
-        int right = std::max(id, (id + 1) % N);
+        int right = std::max(id, (id + 1) % N); // there are 5 forks, so the right fork is the one with the higher index
 
         // Wait based on priority (lower eaten => shorter wait)
-        std::this_thread::sleep_for(std::chrono::milliseconds(priority * 50 + 50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(priority * 50 + 50)); // sleep time based on priority, + 50 to avoid 0 sleep time
 
         // Lock forks in the correct order to avoid deadlock
         forks[left].lock();
@@ -68,7 +68,7 @@ int main() {
 
     // Launch a thread for each hungry man
     for(int i = 0; i < N; i++) {
-        men.emplace_back(hungryMan, i); // new element and the last element of the vector
+        men.emplace_back(hungryMan, i); // new element at the last element of the vector
     }
 
     // Join threads (will run indefinitely) główny wątek czeka na wątki głodomorów
