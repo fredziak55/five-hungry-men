@@ -19,8 +19,19 @@ std::mutex outputMutex;
 // Atomic counters for the total amount each man has eaten -> variables that can be read and modified by multiple threads concurrently without using locks
 std::atomic<int> totalEaten[N];
 
+bool hasHighestPriority(int id) {
+    // current priority is totalEaten[id]
+    int myEaten = totalEaten[id].load();
+    for(int i = 0; i < N; i++) {
+        if(i != id && totalEaten[i].load() < myEaten) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // Function for each hungry man thread
-void hungryMan(int id, int numLoops) {
+void hungryMan(int id, int numLoops, int maxConsecutiveMeals) {
     // Random number generator setup
     std::random_device rd;       // Random seed
     std::mt19937 gen(rd());      // Mersenne Twister engine
@@ -44,22 +55,26 @@ void hungryMan(int id, int numLoops) {
         std::scoped_lock lock(forks[left], forks[right]); // scoped_lock is a C++17 feature that can lock multiple mutexes at once. 
         //this can be done using locks, but scoped_lock is more convenient
 
-        // Generate random meal size and update total
-        int meal = dist(gen); //generate random number from generator
-        totalEaten[id].fetch_add(meal); // .fetch_add() -> add a value to the atomic variable
+        int mealsEatenNow = 0;
+        // keep eating while top priority and not exceeding maxConsecutiveMeals
+        while(hasHighestPriority(id) && mealsEatenNow < maxConsecutiveMeals) {
+            // Generate random meal size and update total
+            int meal = dist(gen); //generate random number from generator
+            totalEaten[id].fetch_add(meal); // .fetch_add() -> add a value to the atomic variable
 
-        // Print info about this meal
-        {
-            std::lock_guard<std::mutex> guard(outputMutex); // lock_guard - wrapper that locks when it is created and automatically unlocks it when it goes out of scope.
-            std::cout << "Hungry man " << id << " ate " << meal  << " (total: " << totalEaten[id].load() << ")\n";
+            // Print info about this meal
+            {
+                std::lock_guard<std::mutex> guard(outputMutex); // lock_guard - wrapper that locks when it is created and automatically unlocks it when it goes out of scope.
+                std::cout << "Hungry man " << id << " ate " << meal  << " (total: " << totalEaten[id].load() << ")\n";
+            }
+            // Simulate eating time
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            mealsEatenNow++;
         }
 
-        // Simulate eating time
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-        // Unlock forks
-        forks[right].unlock();
-        forks[left].unlock();
+        // Unlock forks -> automatically unlocked when lock goes out of scope
+        // forks[right].unlock();
+        // forks[left].unlock();
     }
 }
 
@@ -77,9 +92,14 @@ int main(int argc, char* argv[]) {
         numLoops = std::stoi(argv[1]);
     }
 
+    int maxConsecutiveMeals = 2; 
+    if(argc > 2) {
+        maxConsecutiveMeals = std::stoi(argv[2]);
+    }
+
     // Launch a thread for each hungry man
     for(int i = 0; i < N; i++) {
-        men.emplace_back(hungryMan, i, numLoops); // new element at the last element of the vector
+        men.emplace_back(hungryMan, i, numLoops, maxConsecutiveMeals); // new element at the last element of the vector
     }
 
     // Join threads (will run indefinitely) główny wątek czeka na wątki głodomorów
