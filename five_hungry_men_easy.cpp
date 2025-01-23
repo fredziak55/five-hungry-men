@@ -13,6 +13,9 @@ static const int N = 5;
 // An array of mutexes (forks) -> object thath lets only one thread access a resource at a time
 std::mutex forks[N];
 
+// Mutex for synchronizing output
+std::mutex outputMutex;
+
 // Atomic counters for the total amount each man has eaten -> variables that can be read and modified by multiple threads concurrently without using locks
 std::atomic<int> totalEaten[N];
 
@@ -38,15 +41,18 @@ void hungryMan(int id) {
         std::this_thread::sleep_for(std::chrono::milliseconds(priority * 50 + 50)); // sleep time based on priority, + 50 to avoid 0 sleep time
 
         // Lock forks in the correct order to avoid deadlock
-        forks[left].lock();
-        forks[right].lock();
+        std::scoped_lock lock(forks[left], forks[right]); // scoped_lock is a C++17 feature that can lock multiple mutexes at once. 
+        //this can be done using locks, but scoped_lock is more convenient
 
         // Generate random meal size and update total
         int meal = dist(gen); //generate random number from generator
         totalEaten[id].fetch_add(meal); // .fetch_add() -> add a value to the atomic variable
 
         // Print info about this meal
-        std::cout << "Hungry man " << id << " ate " << meal  << " (total: " << totalEaten[id].load() << ")\n";
+        {
+            std::lock_guard<std::mutex> guard(outputMutex); // lock_guard - wrapper that locks when it is created and automatically unlocks it when it goes out of scope.
+            std::cout << "Hungry man " << id << " ate " << meal  << " (total: " << totalEaten[id].load() << ")\n";
+        }
 
         // Simulate eating time
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
