@@ -14,7 +14,5 @@ Resolved using priority based system with sleep time.
 ```sh
 ./a.out {numLoops} {maxConsecutiveMeals}
 ```
-`numLoops` - int, default 3
-First parameter that gives number of loops in simulation, 
-`maxConsecutiveMeals` - int, default 2
-Second parameter that gives number of max eaten meals in a row by one hungry man
+`numLoops` - int, default 3 <br /> First parameter that gives number of loops in simulation, 
+`maxConsecutiveMeals` - int, default 2 <br />Second parameter that gives number of max eaten meals in a row by one hungry man
