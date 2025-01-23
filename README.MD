@@ -2,6 +2,8 @@
 Project in C++ based on dining philosophers problem
 
 ## Starting the project
-Just compile. 
-Program will run indefinitely. 
-To stop it CTRL + C in terminal, that it is running in.
+1. Compile with g++. 
+`g++ five_hungry_men_easy.cpp`
+2. Run the program
+`./a.out {numLoops}`
+numLoops - int, first parameter that gives number of loops in simulation
