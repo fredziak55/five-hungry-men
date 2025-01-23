@@ -20,13 +20,13 @@ std::mutex outputMutex;
 std::atomic<int> totalEaten[N];
 
 // Function for each hungry man thread
-void hungryMan(int id) {
+void hungryMan(int id, int numLoops) {
     // Random number generator setup
     std::random_device rd;       // Random seed
     std::mt19937 gen(rd());      // Mersenne Twister engine
-    std::uniform_int_distribution<int> dist(1, 5); // Range of meal weight -> wagi posiłków
+    std::uniform_int_distribution<int> dist(1, 50); // Range of meal weight -> wagi posiłków
 
-    while (true) {
+    for(int i = 0; i < numLoops; ++i) { // 
         // Get how much this man has eaten so far
         int myEaten = totalEaten[id].load(); //.load() -> read the value of the atomic variable
 
@@ -63,7 +63,7 @@ void hungryMan(int id) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     // Initialize total eaten
     for(int i = 0; i < N; i++) {
         totalEaten[i] = 0;
@@ -72,9 +72,14 @@ int main() {
     // Create vector to hold our five threads
     std::vector<std::thread> men;
 
+    int numLoops = 3; // how many times men attempt to eat, tracking eating cycles per thread (default 3)
+    if(argc > 1) {
+        numLoops = std::stoi(argv[1]);
+    }
+
     // Launch a thread for each hungry man
     for(int i = 0; i < N; i++) {
-        men.emplace_back(hungryMan, i); // new element at the last element of the vector
+        men.emplace_back(hungryMan, i, numLoops); // new element at the last element of the vector
     }
 
     // Join threads (will run indefinitely) główny wątek czeka na wątki głodomorów
